@@ -1,9 +1,9 @@
 module.exports = function() {
   'use strict';
 
-  DependencyInjection.service('RealTimeService', ['$AbstractService', function($AbstractService) {
+  DependencyInjection.service('$RealTimeService', ['$AbstractService', function($AbstractService) {
 
-    return new (function RealTimeService() {
+    return new (function $RealTimeService() {
 
       $AbstractService.call(this);
 
