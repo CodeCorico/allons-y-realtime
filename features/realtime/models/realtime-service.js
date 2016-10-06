@@ -189,59 +189,68 @@ module.exports = function() {
           var UserModel = DependencyInjection.injector.service.get('UserModel');
 
           UserModel.fromSocket($socket, function(err, user) {
-            if (err || !user) {
+            if (err) {
               return;
             }
 
-            _this.flushPermissions(user, $socket);
-
-            $socket.emit('read(real-time/events)', {
-              success: true
-            });
-
-            if (args.directCalls) {
-              if (!Array.isArray(args.directCalls)) {
-                args.directCalls = [args.directCalls];
-              }
-
-              args.directCalls.forEach(function(directCall) {
-                directCall = _formatEventFromString(directCall);
-
-                Object.keys(_events).forEach(function(eventName) {
-                  if (directCall.origin == eventName && _events[eventName].call) {
-                    _events[eventName].call($socket, directCall.name, directCall.args);
-                  }
-                });
+            _flushSocketPermissions($socket, user, function() {
+              $socket.emit('read(real-time/events)', {
+                success: true
               });
-            }
+
+              if (args.directCalls) {
+                if (!Array.isArray(args.directCalls)) {
+                  args.directCalls = [args.directCalls];
+                }
+
+                args.directCalls.forEach(function(directCall) {
+                  directCall = _formatEventFromString(directCall);
+
+                  Object.keys(_events).forEach(function(eventName) {
+                    if (directCall.origin == eventName && _events[eventName].call) {
+                      _events[eventName].call($socket, directCall.name, directCall.args);
+                    }
+                  });
+                });
+              }
+            });
           });
         }
       );
 
-      function _flushSocketPermissions(socket, user) {
+      function _flushSocketPermissions(socket, user, callback) {
         socket.realTimeEvents = socket.realTimeEvents || [];
+
+        if (!user) {
+          var GroupModel = DependencyInjection.injector.service.get('GroupModel');
+
+          GroupModel.unknownPermissions(function(permissions) {
+            socket.realTimeEvents.forEach(function(event) {
+              event.hasPermission = true;
+
+              if (event.permissions) {
+                for (var i = 0; i < event.permissions.length; i++) {
+                  if (permissions.permissions.indexOf(event.permissions[i]) < 0) {
+                    event.hasPermission = false;
+
+                    break;
+                  }
+                }
+              }
+            });
+
+            callback();
+          });
+
+          return;
+        }
 
         socket.realTimeEvents.forEach(function(event) {
           event.hasPermission = !event.permissions || user.hasPermissions(event.permissions) || false;
         });
+
+        callback();
       }
-
-      this.flushPermissions = function(user, $socket) {
-        if ($socket) {
-          _flushSocketPermissions($socket, user);
-        }
-        else {
-          var $SocketsService = DependencyInjection.injector.service.get('$SocketsService');
-
-          $SocketsService.each(function(socket) {
-            if (!socket || !socket.user || !socket.user.id || socket.user.id != user.id) {
-              return;
-            }
-
-            _flushSocketPermissions(socket, user);
-          });
-        }
-      };
 
       this.registerEvents = function(events) {
         extend(true, _events, events);
