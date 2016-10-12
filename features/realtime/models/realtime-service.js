@@ -454,8 +454,12 @@ module.exports = function() {
       };
 
       this.fire = function(eventName, args, $socket) {
-        var $SocketsService = DependencyInjection.injector.service.get('$SocketsService'),
+        var $SocketsService = DependencyInjection.injector.service.get('$SocketsService', true),
             isMultipartArgs = Array.isArray(args);
+
+        if (!$SocketsService) {
+          return;
+        }
 
         if ($socket) {
           _fireSocket($socket, eventName, args, isMultipartArgs);
