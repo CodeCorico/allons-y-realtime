@@ -403,7 +403,6 @@ module.exports = function() {
         for (var i = 0; i < socket.realTimeEvents.length; i++) {
           if (socket.realTimeEvents[i].name == eventName) {
             if (socket.realTimeEvents[i].hasPermission) {
-
               var eventArgs = {
                 realTimeEvent: eventName,
                 realTimeArgs: isMultipartArgs ? {} : args || null
@@ -424,6 +423,35 @@ module.exports = function() {
           }
         }
       }
+
+      this.socketHasEvent = function(socket, eventName) {
+        socket.realTimeEvents = socket.realTimeEvents || [];
+
+        for (var i = 0; i < socket.realTimeEvents.length; i++) {
+          if (socket.realTimeEvents[i].name == eventName) {
+            return true;
+          }
+        }
+
+        return false;
+      };
+
+      this.userSocketsWithEvent = function(userId, eventName) {
+        var $SocketsService = DependencyInjection.injector.service.get('$SocketsService', true),
+            sockets = [];
+
+        if (!$SocketsService) {
+          return sockets;
+        }
+
+        $SocketsService.each(function(socket) {
+          if (socket && socket.user && socket.user.id == userId && _this.socketHasEvent(socket, eventName)) {
+            sockets.push(socket);
+          }
+        });
+
+        return sockets;
+      };
 
       this.fire = function(eventName, args, $socket) {
         var $SocketsService = DependencyInjection.injector.service.get('$SocketsService'),
