@@ -96,6 +96,45 @@ module.exports = function() {
         _this.updateEvents(null, callback);
       };
 
+      function _callEvents($socket, events) {
+        if (!Array.isArray(events)) {
+          events = [events];
+        }
+
+        events.forEach(function(event) {
+          event = _formatEventFromString(event);
+
+          Object.keys(_events).forEach(function(eventName) {
+            if (event.origin == eventName && _events[eventName].call) {
+              _events[eventName].call($socket, event.name, event.args);
+            }
+          });
+        });
+      }
+
+      this.callEvents = this.methodFrontBack(
+
+        // front
+        function(events) {
+          if (!events) {
+            return;
+          }
+
+          $socket.emit('update(real-time/events.call)', {
+            events: events
+          });
+        },
+
+        // back
+        function($socket, args) {
+          if (!args || typeof args != 'object' || !args.events) {
+            return;
+          }
+
+          _callEvents($socket, args.events);
+        }
+      );
+
       this.updateEvents = this.methodFrontBack(
 
         // front
@@ -199,19 +238,7 @@ module.exports = function() {
               });
 
               if (args.directCalls) {
-                if (!Array.isArray(args.directCalls)) {
-                  args.directCalls = [args.directCalls];
-                }
-
-                args.directCalls.forEach(function(directCall) {
-                  directCall = _formatEventFromString(directCall);
-
-                  Object.keys(_events).forEach(function(eventName) {
-                    if (directCall.origin == eventName && _events[eventName].call) {
-                      _events[eventName].call($socket, directCall.name, directCall.args);
-                    }
-                  });
-                });
+                _callEvents($socket, args.directCalls);
               }
             });
           });
