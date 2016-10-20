@@ -1,6 +1,6 @@
 {
   "name": "allons-y-realtime",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Synchronize front components to their back logics.",
   "license": "MIT",
   "homepage": "http://allons-y.io",
