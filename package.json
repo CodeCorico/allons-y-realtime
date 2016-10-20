@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "allons-y-express": "^1.0.0",
+    "allons-y-models": "^1.0.0",
     "allons-y-socketio": "^1.0.0",
     "extend": "^3.0.0"
   }
