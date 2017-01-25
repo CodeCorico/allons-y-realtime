@@ -112,6 +112,16 @@ module.exports = function() {
         });
       }
 
+      this.fireEvent = function(eventOrigin, eventName, $socket, args, callback) {
+        eventName = eventName || eventOrigin;
+
+        if (!_events[eventOrigin] || !_events[eventOrigin].call) {
+          return;
+        }
+
+        _events[eventOrigin].call($socket, eventName, args, callback);
+      };
+
       this.callEvents = this.methodFrontBack(
 
         // front
@@ -289,8 +299,6 @@ module.exports = function() {
             events.push(extend(true, {
               socket: socket
             }, socket.realTimeEvents[i]));
-
-            break;
           }
         }
       }
