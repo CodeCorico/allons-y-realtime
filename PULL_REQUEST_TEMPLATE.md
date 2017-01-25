@@ -1,9 +1,9 @@
 **Please check if the PR fulfills these requirements**
 - [ ] The commit message follows our guidelines: https://github.com/CodeCorico/allons-y-realtime/blob/master/CONTRIBUTING.md#commit
-- [ ] Docs have been added / updated to the [Wiki](http://allons-y.io/wiki)
+- [ ] Docs have been added / updated to the [Wiki](https://allons-y.io/wiki)
 
 
-**What kind of change does this PR introduce?** (check one with "x")
+**What kind of change does this PR introduce?** <!-- check one with "x" -->
 ```
 [ ] Bugfix
 [ ] Feature

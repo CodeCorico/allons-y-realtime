@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "description": "Synchronize front components to their back logics.",
   "license": "MIT",
-  "homepage": "http://allons-y.io",
+  "homepage": "https://allons-y.io",
   "author": "CodeCorico <hello@codecorico.com>",
   "bugs": "https://github.com/CodeCorico/allons-y-realtime/issues",
   "repository": {
@@ -14,10 +14,12 @@
     "node": ">=4.1",
     "npm": ">=3.2"
   },
+  "devDependencies": {
+    "allons-y-dev-chore": "^1.0.0"
+  },
   "dependencies": {
-    "allons-y-express": "^1.0.0",
     "allons-y-models": "^1.0.0",
-    "allons-y-socketio": "^1.0.0",
+    "allons-y-socketio": "^1.0.3",
     "extend": "^3.0.0"
   }
 }
