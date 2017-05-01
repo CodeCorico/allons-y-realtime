@@ -15,7 +15,8 @@ module.exports = function() {
           _events = [],
           _networkOn = true,
           _lastEvents = null,
-          _url = null;
+          _url = null,
+          _hooks = {};
 
       function _formatEventFromString(eventString) {
         var event = {
@@ -106,7 +107,7 @@ module.exports = function() {
 
           Object.keys(_events).forEach(function(eventName) {
             if (event.origin == eventName && _events[eventName].call) {
-              _events[eventName].call($socket, event.name, event.args);
+              _events[eventName].call($socket, event.name, event.args, function() {});
             }
           });
         });
@@ -118,6 +119,8 @@ module.exports = function() {
         if (!_events[eventOrigin] || !_events[eventOrigin].call) {
           return;
         }
+
+        callback = callback || function() {};
 
         _events[eventOrigin].call($socket, eventName, args, callback);
       };
@@ -235,59 +238,66 @@ module.exports = function() {
             });
           });
 
-          var UserModel = DependencyInjection.injector.service.get('UserModel');
-
-          UserModel.fromSocket($socket, function(err, user) {
-            if (err) {
-              return;
-            }
-
-            _flushSocketPermissions($socket, user, function() {
-              $socket.emit('read(real-time/events)', {
-                success: true
-              });
-
-              if (args.directCalls) {
-                _callEvents($socket, args.directCalls);
-              }
+          _this.hooks.fire('updateEvents', {
+            socket: $socket
+          }, function() {
+            $socket.emit('read(real-time/events)', {
+              success: true
             });
+
+            if (args.directCalls) {
+              _callEvents($socket, args.directCalls);
+            }
           });
         }
       );
 
-      function _flushSocketPermissions(socket, user, callback) {
-        socket.realTimeEvents = socket.realTimeEvents || [];
+      this.hooks = {
+        add: function(eventName, func) {
+          _hooks[eventName] = _hooks[eventName] || [];
+          _hooks[eventName].push(func);
+        },
 
-        if (!user) {
-          var GroupModel = DependencyInjection.injector.service.get('GroupModel');
+        remove: function(eventName, func) {
+          _hooks[eventName] = _hooks[eventName] || [];
 
-          GroupModel.unknownPermissions(function(permissions) {
-            socket.realTimeEvents.forEach(function(event) {
-              event.hasPermission = true;
+          for (var i = _hooks[eventName].length - 1; i >= 0; i--) {
+            if (_hooks[eventName][i] == func) {
+              _hooks[eventName].splice(i, 1);
+            }
+          }
 
-              if (event.permissions) {
-                for (var i = 0; i < event.permissions.length; i++) {
-                  if (permissions.permissions.indexOf(event.permissions[i]) < 0) {
-                    event.hasPermission = false;
+          if (!_hooks[eventName].length) {
+            delete _hooks[eventName];
+          }
+        },
 
-                    break;
-                  }
-                }
-              }
-            });
+        fire: function(eventName, args, callback, i) {
+          i = i || 0;
 
-            callback();
+          if (!_hooks[eventName] || !_hooks[eventName].length || _hooks[eventName].length >= i) {
+            return callback();
+          }
+
+          _hooks[eventName](args, function() {
+            _this.hooks.fire(eventName, args, callback, i++);
           });
-
-          return;
         }
+      };
 
-        socket.realTimeEvents.forEach(function(event) {
-          event.hasPermission = !event.permissions || user.hasPermissions(event.permissions) || false;
+      this.registerModelEvents = function(model, events) {
+        Object.keys(events).forEach(function(eventName) {
+          if (events[eventName].call) {
+            var call = events[eventName].call;
+
+            events[eventName].call = function() {
+              model[call].apply(model, arguments);
+            };
+          }
         });
 
-        callback();
-      }
+        _this.registerEvents(events);
+      },
 
       this.registerEvents = function(events) {
         extend(true, _events, events);
@@ -488,7 +498,7 @@ module.exports = function() {
         return sockets;
       };
 
-      this.fire = function(eventName, args, $socket) {
+      this.fire = function(eventName, args, sockets) {
         var $SocketsService = DependencyInjection.injector.service.get('$SocketsService', true),
             isMultipartArgs = Array.isArray(args);
 
@@ -496,8 +506,12 @@ module.exports = function() {
           return;
         }
 
-        if ($socket) {
-          _fireSocket($socket, eventName, args, isMultipartArgs);
+        if (sockets) {
+          sockets = Array.isArray(sockets) ? sockets : [sockets];
+
+          sockets.forEach(function(socket) {
+            _fireSocket(socket, eventName, args, isMultipartArgs);
+          });
         }
         else {
           $SocketsService.each(function(socket) {
