@@ -1,0 +1,22 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.12.0
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  'npm:lodash:20180130':
+    - allons-y-models > sails-mysql > lodash:
+        patched: '2018-07-02T22:27:45.367Z'
+    - allons-y-models > sails-mongo > waterline-cursor > lodash:
+        patched: '2018-07-02T22:27:45.367Z'
+    - allons-y-models > sails-redis > waterline-cursor > lodash:
+        patched: '2018-07-02T22:27:45.367Z'
+    - allons-y-models > sails-postgresql > lodash:
+        patched: '2018-07-02T22:27:45.367Z'
+    - allons-y-models > waterline > lodash:
+        patched: '2018-07-02T22:27:45.367Z'
+    - allons-y-models > waterline > switchback > lodash:
+        patched: '2018-07-02T22:27:45.367Z'
+    - allons-y-models > waterline > waterline-criteria > lodash:
+        patched: '2018-07-02T22:27:45.367Z'
+    - allons-y-models > waterline > waterline-schema > lodash:
+        patched: '2018-07-02T22:27:45.367Z'
