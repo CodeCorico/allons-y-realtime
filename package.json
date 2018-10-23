@@ -20,6 +20,12 @@
   "dependencies": {
     "allons-y-models": "^1.0.0",
     "allons-y-socketio": "^1.0.3",
-    "extend": "^3.0.0"
-  }
+    "extend": "^3.0.0",
+    "snyk": "^1.104.2"
+  },
+  "scripts": {
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
+  },
+  "snyk": true
 }
